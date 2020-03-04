@@ -23,12 +23,16 @@
 
 import {MDCFoundation} from '@material/base/foundation';
 import {MDCDataTableAdapter} from './adapter';
-import {cssClasses, strings} from './constants';
+import {cssClasses, strings, SortValue} from './constants';
+import {SortActionEventData} from './types';
 
 export class MDCDataTableFoundation extends MDCFoundation<MDCDataTableAdapter> {
   static get defaultAdapter(): MDCDataTableAdapter {
     return {
       addClassAtRowIndex: () => undefined,
+      getAttributeByHeaderCellIndex: () => '',
+      getHeaderCellCount: () => 0,
+      getHeaderCellElements: () => [],
       getRowCount: () => 0,
       getRowElements: () => [],
       getRowIdAtIndex: () => '',
@@ -39,11 +43,15 @@ export class MDCDataTableFoundation extends MDCFoundation<MDCDataTableAdapter> {
       isRowsSelectable: () => false,
       notifyRowSelectionChanged: () => undefined,
       notifySelectedAll: () => undefined,
+      notifySortAction: () => undefined,
       notifyUnselectedAll: () => undefined,
       registerHeaderRowCheckbox: () => undefined,
       registerRowCheckboxes: () => undefined,
       removeClassAtRowIndex: () => undefined,
+      removeClassNameByHeaderCellIndex: () => undefined,
       setAttributeAtRowIndex: () => undefined,
+      setAttributeByHeaderCellIndex: () => undefined,
+      setClassNameByHeaderCellIndex: () => undefined,
       setHeaderRowCheckboxChecked: () => undefined,
       setHeaderRowCheckboxIndeterminate: () => undefined,
       setRowCheckboxCheckedAtIndex: () => undefined,
@@ -85,6 +93,13 @@ export class MDCDataTableFoundation extends MDCFoundation<MDCDataTableAdapter> {
    */
   getRows(): Element[] {
     return this.adapter_.getRowElements();
+  }
+
+  /**
+   * @return Array of header cell elements.
+   */
+  getHeaderCells(): Element[] {
+    return this.adapter_.getHeaderCellElements();
   }
 
   /**
@@ -156,6 +171,48 @@ export class MDCDataTableFoundation extends MDCFoundation<MDCDataTableAdapter> {
 
     const rowId = this.adapter_.getRowIdAtIndex(rowIndex);
     this.adapter_.notifyRowSelectionChanged({rowId, rowIndex, selected});
+  }
+
+  /**
+   * Handles sort action on sortable header cell.
+   */
+  handleSortAction(eventData: SortActionEventData) {
+    const {columnId, columnIndex, headerCell} = eventData;
+
+    const currentSortValue = this.adapter_.getAttributeByHeaderCellIndex(columnIndex, strings.ARIA_SORT);
+
+    for (let index = 0; index < this.adapter_.getHeaderCellCount(); index++) {
+      if (index === columnIndex) {
+        continue;
+      }
+
+      this.adapter_.removeClassNameByHeaderCellIndex(index, cssClasses.HEADER_CELL_SORTED);
+      this.adapter_.removeClassNameByHeaderCellIndex(index, cssClasses.HEADER_CELL_SORTED_DESCENDING);
+      this.adapter_.setAttributeByHeaderCellIndex(index, strings.ARIA_SORT, SortValue.NONE);
+    }
+
+    this.adapter_.setClassNameByHeaderCellIndex(columnIndex, cssClasses.HEADER_CELL_SORTED);
+
+    let sortValue = SortValue.NONE;
+    if (currentSortValue === SortValue.ASCENDING) {
+      this.adapter_.setClassNameByHeaderCellIndex(columnIndex, cssClasses.HEADER_CELL_SORTED_DESCENDING);
+      this.adapter_.setAttributeByHeaderCellIndex(columnIndex, strings.ARIA_SORT, SortValue.DESCENDING);
+      sortValue = SortValue.DESCENDING;
+    } else if (currentSortValue === SortValue.DESCENDING) {
+      this.adapter_.removeClassNameByHeaderCellIndex(columnIndex, cssClasses.HEADER_CELL_SORTED_DESCENDING);
+      this.adapter_.setAttributeByHeaderCellIndex(columnIndex, strings.ARIA_SORT, SortValue.ASCENDING);
+      sortValue = SortValue.ASCENDING;
+    } else {
+      this.adapter_.setAttributeByHeaderCellIndex(columnIndex, strings.ARIA_SORT, SortValue.ASCENDING);
+      sortValue = SortValue.ASCENDING;
+    }
+
+    this.adapter_.notifySortAction({
+      columnId,
+      columnIndex,
+      headerCell,
+      sortValue,
+    });
   }
 
   /**

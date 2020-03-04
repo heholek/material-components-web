@@ -21,8 +21,29 @@
  * THE SOFTWARE.
  */
 
+import {SortValue} from './constants';
+
 export interface MDCDataTableRowSelectionChangedEventDetail {
   rowIndex: number;
   rowId: string | null;
   selected: boolean;
+}
+
+/**
+ * Event payload sent to `handleSortAction()` foundation method.
+ */
+export interface SortActionEventData {
+  columnId: string | null;
+  columnIndex: number;
+  headerCell: HTMLElement;
+}
+
+/**
+ * Event detail used to notify sort action.
+ */
+export interface SortActionEventDetail {
+  columnId: string | null;
+  columnIndex: number;
+  headerCell: HTMLElement;
+  sortValue: SortValue;
 }

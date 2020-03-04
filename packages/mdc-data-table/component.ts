@@ -100,7 +100,7 @@ export class MDCDataTable extends MDCComponent<MDCDataTableFoundation> {
     // DO NOT INLINE this variable. For backward compatibility, foundations take a Partial<MDCFooAdapter>.
     // To ensure we don't accidentally omit any methods, we need a separate, strongly typed adapter variable.
     // tslint:disable:object-literal-sort-keys Methods should be in the same order as the adapter interface.
-    const adapter: MDCDataTableAdapter = {
+    const adapter: Partial<MDCDataTableAdapter> = {
       addClassAtRowIndex: (rowIndex: number, className: string) => this.getRows()[rowIndex].classList.add(className),
       getRowCount: () => this.getRows().length,
       getRowElements: () => [].slice.call(this.root_.querySelectorAll(strings.ROW_SELECTOR)),
